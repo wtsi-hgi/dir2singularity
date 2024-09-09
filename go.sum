@@ -1,0 +1,6 @@
+github.com/google/go-containerregistry v0.20.2 h1:B1wPJ1SN/S7pB+ZAimcciVD+r+yV/l/DSArMxlbwseo=
+github.com/google/go-containerregistry v0.20.2/go.mod h1:z38EKdKh4h7IP2gSfUUqEvalZBqs6AoLeWfUy34nQC8=
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/sylabs/sif/v2 v2.19.1 h1:1eeMmFc8elqJe60ZiWwXgL3gMheb0IP4GmNZ4q0IEA0=
+github.com/sylabs/sif/v2 v2.19.1/go.mod h1:U1SUhvl8X1JIxAylC0DYz1fa/Xba6EMZD1dGPGBH83E=
