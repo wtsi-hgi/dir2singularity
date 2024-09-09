@@ -132,6 +132,29 @@ func (s *SquashFS) WriteFile(source, dest string) error {
 	return nil
 }
 
+func (s *SquashFS) WriteData(source []byte, dest string) error {
+	if s.exists(dest) {
+		return nil
+	}
+
+	if err := s.w.WriteHeader(&tar.Header{
+		Typeflag: tar.TypeReg,
+		Name:     dest,
+		ModTime:  time.Now(),
+		Mode:     0755,
+		Size:     int64(len(source)),
+		Format:   tar.FormatGNU,
+	}); err != nil {
+		return err
+	}
+
+	if _, err := s.w.Write(source); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *SquashFS) WriteSymlink(source, dest string) error {
 	if s.exists(dest) {
 		return nil
