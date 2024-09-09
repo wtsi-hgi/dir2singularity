@@ -68,10 +68,10 @@ func run() error {
 		tmpDir       string
 	)
 
-	flag.Var(&paths, "p", "path to be added to image (can be used multiple times")
+	flag.Var(&paths, "p", "path to be added to image (can be used multiple times)")
 	flag.StringVar(&base, "b", "", "path to base singularity image")
 	flag.StringVar(&output, "o", "", "output image")
-	flag.Var(&replacements, "r", "replacement prefixes")
+	flag.Var(&replacements, "r", "replacement prefixes, format find:replace (can be used multiple times).")
 	flag.StringVar(&tmpDir, "t", os.TempDir(), "directory to temporarily place squashfs file")
 
 	flag.Parse()
