@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -20,7 +21,7 @@ func (p *Paths) Set(path string) error {
 	return nil
 }
 
-func (p *Paths) String() string {
+func (Paths) String() string {
 	return ""
 }
 
@@ -37,7 +38,7 @@ func (r *Replacements) Set(rs string) error {
 	return nil
 }
 
-func (r *Replacements) String() string {
+func (Replacements) String() string {
 	return ""
 }
 
@@ -51,6 +52,23 @@ func (r Replacements) Replace(path string) string {
 	return path
 }
 
+type EnvVars [][2]string
+
+func (e *EnvVars) Set(ev string) error {
+	parts := strings.Split(ev, "=")
+	if len(parts) != 2 {
+		return ErrInvalidEnvVar
+	}
+
+	*e = append(*e, [2]string{parts[0], parts[1]})
+
+	return nil
+}
+
+func (EnvVars) String() string {
+	return ""
+}
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -62,15 +80,17 @@ func main() {
 func run() error {
 	var (
 		paths        Paths
+		envs         EnvVars
 		replacements Replacements
 		base         string
 		output       string
 		tmpDir       string
 	)
 
-	flag.Var(&paths, "p", "path to be added to image (can be used multiple times)")
 	flag.StringVar(&base, "b", "", "path to base singularity image")
+	flag.Var(&envs, "e", "env var to add to the singularity image (can be used multiple times)")
 	flag.StringVar(&output, "o", "", "output image")
+	flag.Var(&paths, "p", "path to be added to image (can be used multiple times)")
 	flag.Var(&replacements, "r", "replacement prefixes, format find:replace (can be used multiple times).")
 	flag.StringVar(&tmpDir, "t", os.TempDir(), "directory to temporarily place squashfs file")
 
@@ -108,6 +128,12 @@ func run() error {
 		}
 	}
 
+	if len(envs) > 0 {
+		if err := writeEnvs(sqfs, envs); err != nil {
+			return err
+		}
+	}
+
 	if err := sqfs.Close(); err != nil {
 		return err
 	}
@@ -117,6 +143,24 @@ func run() error {
 	}
 
 	return addToSIF(output, sqfsFile)
+}
+
+func writeEnvs(sqfs *SquashFS, envs EnvVars) error {
+	var buf bytes.Buffer
+
+	for _, env := range envs {
+		fmt.Fprintf(&buf, "export %s=%q\n", env[0], env[1])
+	}
+
+	if err := sqfs.WriteDir("/.singularity.d"); err != nil {
+		return err
+	} else if err = sqfs.WriteDir("/.singularity.d/env"); err != nil {
+		return err
+	} else if err = sqfs.WriteData(buf.Bytes(), "/.singularity.d/env/99_dir2singularity.sh"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func cloneBase(base, output string) (err error) {
@@ -177,6 +221,7 @@ func addToSIF(baseSIF, squashfs string) error {
 
 var (
 	ErrInvalidReplacement = errors.New("invalid replacement")
+	ErrInvalidEnvVar      = errors.New("invalid environmental variable")
 	ErrBaseRequired       = errors.New("base required")
 	ErrOutputRequired     = errors.New("output required")
 	ErrPathsRequired      = errors.New("at least one path must be specified")
